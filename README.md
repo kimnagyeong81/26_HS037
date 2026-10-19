@@ -166,7 +166,7 @@ MongoDB에 실제 데이터가 존재하는 연·월만 선택하여 월간 리�
 ## 👥 2. 팀원 소개
 | 김나경 | 박상범 | 손민정 | 멘토 |
 |:---:|:---:|:---:|:---:|
-| <img src="docs/images/김나경.png" width="140" height="140"> | <img src="docs/images/박상범.jpg" width="140" height="140"> | <img src="docs/images/손민정.jpg" width="140" height="140"> | <img src="docs/images/4.png" width="140" height="140"> |
+| <img src="docs/images/김나경.png" width="120" height="140"> | <img src="docs/images/박상범.jpg" width="120" height="140"> | <img src="docs/images/손민정.jpg" width="120" height="140"> ||
 | **멘티1** | **멘티2** | **멘티3** | **멘토** |
 | 개발총괄<br>AI·소프트웨어 개발 | 하드웨어 개발<br>LLM 파인튜닝 | 하드웨어 개발<br>UI/UX 설계 | 프로젝트 멘토<br>기술 자문 |
 ---
