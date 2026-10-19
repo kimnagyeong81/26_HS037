@@ -1,0 +1,33 @@
+# ============================================================
+# AI Model Files
+# ============================================================
+
+# Server LLM / CNN models
+Server/models/
+
+# Client models
+Client/bllossom_3b/
+Client/whisper-small-ko-final/
+Client/merry_lora_model_3b_v2/
+
+# Generic model extensions
+*.gguf
+*.pth
+*.pt
+*.safetensors
+*.onnx
+
+# ============================================================
+# Runtime generated files
+# ============================================================
+
+Client/stt_flac/
+Client/stt_results/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log

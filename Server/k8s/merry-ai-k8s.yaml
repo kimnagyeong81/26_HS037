@@ -1,0 +1,535 @@
+# ============================================================
+# Merry AI Application Stack
+#
+# 외부 Secret:
+#   - merry-mongo-auth
+#       └─ MONGO_URI
+#   - merry-api-secret
+#       └─ MERRY_API_KEY
+#
+# 데이터 서비스:
+#   - Kafka   : merry-kafka.merry-ai.svc.cluster.local:9092
+#   - MongoDB : merry-mongodb.merry-ai.svc.cluster.local:27017
+#
+# 공유 디렉터리:
+#   - Audio   : /var/lib/merry-ai/utterances
+#   - CNN 모델: /Server/models
+# ============================================================
+
+
+# ============================================================
+# 1. Namespace
+# ============================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: merry-ai
+
+
+---
+# ============================================================
+# 2. 공통 환경변수 ConfigMap
+#
+# 중요:
+# MongoDB URI는 비밀번호를 포함하므로 ConfigMap에 저장하지 않는다.
+# merry-mongo-auth Secret의 MONGO_URI를 각 Pod에 주입한다.
+# ============================================================
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: merry-config
+  namespace: merry-ai
+
+data:
+  # ----------------------------------------------------------
+  # Kafka
+  # ----------------------------------------------------------
+  KAFKA_SERVER: "merry-kafka.merry-ai.svc.cluster.local:9092"
+
+  RAW_TOPIC: "dementia-raw-utterance-topic"
+  RESULT_TOPIC: "dementia-analysis-result-topic"
+
+  GROUP_ID: "dementia-analysis-consumer-group"
+
+
+  # ----------------------------------------------------------
+  # MongoDB Database / Collection
+  #
+  # MONGO_URI는 merry-mongo-auth Secret에서 별도로 주입
+  # ----------------------------------------------------------
+  DEMENTIA_DB_NAME: "dementia_db"
+  EVENT_COLLECTION: "events"
+  ANOMALY_COLLECTION: "anomaly_results"
+
+
+  # ----------------------------------------------------------
+  # Consumer
+  # API 내부 Consumer는 실행하지 않고
+  # 별도의 merry-consumer Deployment 사용
+  # ----------------------------------------------------------
+  START_CONSUMER: "false"
+
+
+  # ----------------------------------------------------------
+  # Timezone
+  # ----------------------------------------------------------
+  TZ: "Asia/Seoul"
+
+
+---
+# ============================================================
+# 3. FastAPI Deployment
+# ============================================================
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: merry-api
+  namespace: merry-ai
+
+spec:
+  replicas: 1
+
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      app: merry-api
+
+  template:
+    metadata:
+      labels:
+        app: merry-api
+
+    spec:
+      # 현재 Merry AI 데이터 및 이미지가 존재하는 노드에 고정
+      nodeSelector:
+        merry-ai-host: "true"
+
+      # 현재 운영 구성 유지
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+
+      terminationGracePeriodSeconds: 40
+
+      containers:
+        - name: api
+
+          # 현재 운영 API 이미지
+          image: docker.io/library/merry-ai-server:v5
+          imagePullPolicy: Never
+
+          command:
+            - python
+            - -m
+            - uvicorn
+            - api_kafka_receiver:app
+
+          args:
+            - --host
+            - "0.0.0.0"
+            - --port
+            - "8000"
+            - --workers
+            - "1"
+
+
+          # --------------------------------------------------
+          # 공통 환경변수
+          # --------------------------------------------------
+          envFrom:
+            - configMapRef:
+                name: merry-config
+
+
+          # --------------------------------------------------
+          # Secret / 개별 환경변수
+          # --------------------------------------------------
+          env:
+            # API Key
+            - name: MERRY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: merry-api-secret
+                  key: MERRY_API_KEY
+                  optional: true
+
+            # Kubernetes MongoDB
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: merry-mongo-auth
+                  key: MONGO_URI
+
+
+          # --------------------------------------------------
+          # Shared Audio Storage
+          # --------------------------------------------------
+          volumeMounts:
+            - name: utterance-storage
+              mountPath: /data/utterances
+
+
+          ports:
+            - name: http
+              containerPort: 8000
+
+
+          # --------------------------------------------------
+          # Probes
+          # --------------------------------------------------
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+
+            periodSeconds: 5
+            failureThreshold: 30
+
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+
+            periodSeconds: 10
+
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+
+            periodSeconds: 20
+
+
+          # --------------------------------------------------
+          # Resources
+          # --------------------------------------------------
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+
+
+      # ------------------------------------------------------
+      # Volumes
+      # ------------------------------------------------------
+      volumes:
+        - name: utterance-storage
+          hostPath:
+            path: /var/lib/merry-ai/utterances
+            type: Directory
+
+
+---
+# ============================================================
+# 4. FastAPI Service
+# ============================================================
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: merry-api
+  namespace: merry-ai
+
+spec:
+  type: NodePort
+
+  selector:
+    app: merry-api
+
+  ports:
+    - name: http
+      protocol: TCP
+
+      port: 8300
+      targetPort: 8000
+
+      nodePort: 32081
+
+
+---
+# ============================================================
+# 5. Kafka Analysis Consumer Deployment
+#
+# 역할:
+#   Kafka
+#     ↓
+#   STT Text
+#     ↓
+#   언어 분석
+#     +
+#   CNN 음성 분석
+#     ↓
+#   MongoDB
+# ============================================================
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: merry-consumer
+  namespace: merry-ai
+
+spec:
+  replicas: 1
+
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      app: merry-consumer
+
+  template:
+    metadata:
+      labels:
+        app: merry-consumer
+
+    spec:
+      nodeSelector:
+        merry-ai-host: "true"
+
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+
+      terminationGracePeriodSeconds: 60
+
+      containers:
+        - name: consumer
+
+          # CNN + MongoDB 통합 완료 이미지
+          image: docker.io/library/merry-ai-server:v7
+          imagePullPolicy: Never
+
+          command:
+            - python
+            - -u
+            - analysis_consumer.py
+
+
+          # --------------------------------------------------
+          # 공통 환경변수
+          # --------------------------------------------------
+          envFrom:
+            - configMapRef:
+                name: merry-config
+
+
+          # --------------------------------------------------
+          # Consumer 개별 환경변수
+          # --------------------------------------------------
+          env:
+            # Kubernetes MongoDB
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: merry-mongo-auth
+                  key: MONGO_URI
+
+            # CNN 사용
+            - name: CNN_ENABLED
+              value: "true"
+
+            # CNN 모델 위치
+            - name: CNN_MODEL_DIR
+              value: "/Server/models"
+
+            # 공유 음성 파일 위치
+            - name: AUDIO_STORAGE_DIR
+              value: "/data/utterances"
+
+
+          # --------------------------------------------------
+          # Volume Mounts
+          # --------------------------------------------------
+          volumeMounts:
+            # CNN 모델
+            - name: cnn-models
+              mountPath: /Server/models
+              readOnly: true
+
+            # API가 저장한 FLAC 공유
+            - name: utterance-storage
+              mountPath: /data/utterances
+
+
+          # --------------------------------------------------
+          # Resources
+          # --------------------------------------------------
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1Gi"
+
+            limits:
+              cpu: "2000m"
+              memory: "6Gi"
+
+
+      # ------------------------------------------------------
+      # Volumes
+      # ------------------------------------------------------
+      volumes:
+        # CNN 모델
+        - name: cnn-models
+          hostPath:
+            path: /Server/models
+            type: Directory
+
+        # API / Consumer 공유 음성 디렉터리
+        - name: utterance-storage
+          hostPath:
+            path: /var/lib/merry-ai/utterances
+            type: Directory
+
+
+---
+# ============================================================
+# 6. Streamlit Dashboard Deployment
+# ============================================================
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: merry-dashboard
+  namespace: merry-ai
+
+spec:
+  replicas: 1
+
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      app: merry-dashboard
+
+  template:
+    metadata:
+      labels:
+        app: merry-dashboard
+
+    spec:
+      nodeSelector:
+        merry-ai-host: "true"
+
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+
+      containers:
+        - name: dashboard
+
+          image: docker.io/library/merry-ai-server:v12
+          imagePullPolicy: Never
+
+          command:
+            - python
+            - -m
+            - streamlit
+            - run
+            - dashboard.py
+            - --server.address
+            - "0.0.0.0"
+            - --server.port
+            - "8501"
+            - --server.headless
+            - "true"
+            - --browser.gatherUsageStats
+            - "false"
+
+
+          # --------------------------------------------------
+          # 공통 환경변수
+          # --------------------------------------------------
+          envFrom:
+            - configMapRef:
+                name: merry-config
+
+
+          # --------------------------------------------------
+          # Dashboard 개별 환경변수
+          # --------------------------------------------------
+          env:
+            # 월간 리포트 서버
+            - name: MERRY_REPORT_PUBLIC_URL
+              value: "http://192.168.219.104:8502"
+
+            # Kubernetes MongoDB
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: merry-mongo-auth
+                  key: MONGO_URI
+
+
+          ports:
+            - name: http
+              containerPort: 8501
+
+
+          # --------------------------------------------------
+          # Probes
+          # --------------------------------------------------
+          readinessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+
+            periodSeconds: 10
+
+
+          livenessProbe:
+            httpGet:
+              path: /_stcore/health
+              port: 8501
+
+            periodSeconds: 20
+
+
+          # --------------------------------------------------
+          # Resources
+          # --------------------------------------------------
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+
+
+---
+# ============================================================
+# 7. Streamlit Dashboard Service
+# ============================================================
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: merry-dashboard
+  namespace: merry-ai
+
+spec:
+  type: ClusterIP
+
+  selector:
+    app: merry-dashboard
+
+  ports:
+    - name: http
+      port: 8501
+      targetPort: 8501

@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: merry-report
+  namespace: merry-ai
+spec:
+  replicas: 1
+
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: merry-report
+
+  template:
+    metadata:
+      labels:
+        app: merry-report
+
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+
+      nodeSelector:
+        merry-ai-host: "true"
+
+      containers:
+        - name: report
+          image: docker.io/library/merry-ai-server:v13
+          imagePullPolicy: Never
+
+          workingDir: /app
+
+          command:
+            - python
+            - -m
+            - uvicorn
+            - monthly_report:app
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8502"
+
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: merry-mongo-auth
+                  key: MONGO_URI
+
+            - name: DEMENTIA_DB_NAME
+              value: dementia_db
+
+            - name: EVENT_COLLECTION
+              value: events
+
+            - name: ANOMALY_COLLECTION
+              value: anomaly_results
+
+            - name: EMOTION_DB_NAME
+              value: emotion_gauge
+
+            - name: MARBLE_COLLECTION
+              value: marble_events
+
+            - name: REPORT_INTERNAL_BASE_URL
+
+              value: "http://127.0.0.1:8502"
+
+
+            - name: TZ
+              value: Asia/Seoul
+
+          ports:
+            - name: http
+              containerPort: 8502
+              protocol: TCP
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+
+            limits:
+              cpu: "1"
+              memory: 1Gi
+
+          readinessProbe:
+            tcpSocket:
+              port: 8502
+            initialDelaySeconds: 3
+            periodSeconds: 5
+
+          livenessProbe:
+            tcpSocket:
+              port: 8502
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: merry-report
+  namespace: merry-ai
+
+spec:
+  selector:
+    app: merry-report
+
+  ports:
+    - name: http
+      port: 8502
+      targetPort: 8502
+      protocol: TCP
+
+  type: ClusterIP

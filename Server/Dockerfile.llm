@@ -1,0 +1,134 @@
+# =============================================================================
+# Stage 1: llama-cpp-python CUDA wheel build
+# =============================================================================
+
+FROM nvidia/cuda:12.4.1-devel-ubuntu22.04 AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y \
+        python3 \
+        python3-pip \
+        python3-dev \
+        build-essential \
+        cmake \
+        ninja-build \
+        git && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m pip install \
+        --upgrade \
+        pip \
+        setuptools \
+        wheel
+
+# RTX 3060 Ti = Compute Capability 8.6
+ENV CMAKE_ARGS="-DGGML_CUDA=on -DCMAKE_CUDA_ARCHITECTURES=86"
+ENV FORCE_CMAKE=1
+
+RUN mkdir -p /wheels && \
+    python3 -m pip wheel \
+        --no-cache-dir \
+        --no-deps \
+        --wheel-dir /wheels \
+        llama-cpp-python==0.3.36
+
+
+# =============================================================================
+# Stage 2: Runtime
+# =============================================================================
+
+FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && \
+    apt-get install -y \
+        python3 \
+        python3-pip && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m pip install \
+        --upgrade \
+        pip \
+        setuptools \
+        wheel
+
+
+# -----------------------------------------------------------------------------
+# Application
+# -----------------------------------------------------------------------------
+
+WORKDIR /app
+
+COPY requirements-llm.txt /app/requirements-llm.txt
+
+RUN python3 -m pip install \
+        --no-cache-dir \
+        -r /app/requirements-llm.txt
+
+
+# CUDA 지원 llama-cpp-python wheel
+COPY --from=builder /wheels /wheels
+
+RUN python3 -m pip install \
+        --no-cache-dir \
+        /wheels/*.whl && \
+    rm -rf /wheels
+
+
+# Merry LLM source
+COPY llm_module.py /app/llm_module.py
+COPY llm_api_server.py /app/llm_api_server.py
+
+
+# -----------------------------------------------------------------------------
+# LLM configuration
+# -----------------------------------------------------------------------------
+
+ENV GGUF_MODEL_PATH=/models/merry-Q4_K_M.gguf
+
+ENV LLM_N_CTX=2048
+ENV LLM_N_BATCH=256
+ENV LLM_N_GPU_LAYERS=-1
+ENV LLM_N_THREADS=4
+
+ENV LLM_MAX_NEW_TOKENS=80
+ENV LLM_TEMPERATURE=0.3
+ENV LLM_TOP_P=0.85
+ENV LLM_REPEAT_PENALTY=1.15
+
+ENV LLM_MAX_HISTORY_TURNS=4
+
+ENV LLM_FORCE_GPU=true
+ENV LLM_VERBOSE=false
+
+
+# -----------------------------------------------------------------------------
+# Network
+# -----------------------------------------------------------------------------
+
+EXPOSE 8100
+
+
+# -----------------------------------------------------------------------------
+# Health check
+# -----------------------------------------------------------------------------
+
+HEALTHCHECK \
+    --interval=30s \
+    --timeout=5s \
+    --start-period=30s \
+    --retries=3 \
+    CMD python3 -c \
+    "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8100/health', timeout=3)" \
+    || exit 1
+
+
+# -----------------------------------------------------------------------------
+# Start
+# -----------------------------------------------------------------------------
+
+CMD ["python3", "-m", "uvicorn", "llm_api_server:app", "--host", "0.0.0.0", "--port", "8100", "--workers", "1"]

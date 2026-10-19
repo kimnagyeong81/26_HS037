@@ -1,0 +1,140 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: merry-llm
+  namespace: merry-ai
+  labels:
+    app: merry-llm
+
+spec:
+  replicas: 1
+
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      app: merry-llm
+
+  template:
+    metadata:
+      labels:
+        app: merry-llm
+
+    spec:
+      runtimeClassName: nvidia
+      # 현재 GGUF가 /Server/models 에 있는 이 노드에서만 실행
+      nodeSelector:
+        kubernetes.io/hostname: hwibeen
+
+      containers:
+        - name: merry-llm
+
+          image: merry-llm:0.1
+
+          # 로컬에서 빌드한 이미지를 사용할 예정이므로
+          # 외부 Registry에서 pull하지 않음
+          imagePullPolicy: Never
+
+          ports:
+            - name: http
+              containerPort: 8100
+              protocol: TCP
+
+          env:
+            # -----------------------------------------------------------------
+            # GGUF Model
+            # -----------------------------------------------------------------
+            - name: GGUF_MODEL_PATH
+              value: "/models/EXAONE-3.5-7.8B-Instruct-Q5_K_M.gguf"
+
+            # -----------------------------------------------------------------
+            # llama.cpp
+            # -----------------------------------------------------------------
+            - name: LLM_N_CTX
+              value: "2048"
+
+            - name: LLM_N_BATCH
+              value: "256"
+
+            - name: LLM_N_GPU_LAYERS
+              value: "-1"
+
+            - name: LLM_N_THREADS
+              value: "4"
+
+            # -----------------------------------------------------------------
+            # Generation
+            # -----------------------------------------------------------------
+            - name: LLM_MAX_NEW_TOKENS
+              value: "80"
+
+            - name: LLM_TEMPERATURE
+              value: "0.3"
+
+            - name: LLM_TOP_P
+              value: "0.85"
+
+            - name: LLM_REPEAT_PENALTY
+              value: "1.15"
+
+            # -----------------------------------------------------------------
+            # Conversation
+            # -----------------------------------------------------------------
+            - name: LLM_MAX_HISTORY_TURNS
+              value: "4"
+
+            # -----------------------------------------------------------------
+            # GPU
+            # -----------------------------------------------------------------
+            - name: LLM_FORCE_GPU
+              value: "true"
+
+            - name: LLM_VERBOSE
+              value: "false"
+
+          # RTX 3060 Ti 1개를 이 Pod에 할당
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+
+          volumeMounts:
+            - name: merry-llm-model
+              mountPath: /models
+              readOnly: true
+
+          # 모델 로딩까지 완료되었는지 확인
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8100
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+
+          # 실제 트래픽을 받을 준비가 되었는지 확인
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8100
+            initialDelaySeconds: 2
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          # 실행 중 LLM API가 죽었는지 확인
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8100
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+      volumes:
+        - name: merry-llm-model
+          hostPath:
+            path: /Server/models
+            type: Directory

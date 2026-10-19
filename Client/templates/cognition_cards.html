@@ -1,0 +1,43 @@
+{# report.html의 기존 언어·인지 지표 제목과 카드 6개 영역을 이 include로 교체합니다.
+   {% include "cognition_cards.html" %}
+   서버 context의 cognition을 그대로 사용합니다. #}
+<style>
+.language-demo {margin:20px 0;font-family:inherit;color:#252b43;}
+.language-demo h2 {font-size:18px;margin:0 0 12px;}
+.language-demo .demo-notice {font-size:12px;color:#707993;margin:0 0 14px;}
+.language-demo-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+.language-demo-card {background:#fff;border:1px solid #e0e5f4;border-top:4px solid #268766;border-radius:16px;padding:18px;box-shadow:0 4px 12px #24334b05;}
+.language-demo-card.watch {border-top-color:#e5a334;}
+.language-demo-card.caution {border-top-color:#e65459;}
+.language-demo-card .card-heading {display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.language-demo-card .card-title {font-size:14px;color:#596383;}
+.language-demo-card .card-badge {border-radius:14px;padding:4px 9px;font-size:11px;white-space:nowrap;background:#eaf5ef;color:#268766;}
+.language-demo-card.watch .card-badge {background:#fff5e5;color:#b8770d;}
+.language-demo-card.caution .card-badge {background:#fff0f0;color:#cd454b;}
+.language-demo-card .card-value {font-size:32px;font-weight:700;color:#268766;margin:12px 0 2px;}
+.language-demo-card.watch .card-value {color:#b8770d;}
+.language-demo-card.caution .card-value {color:#cd454b;}
+.language-demo-card .card-unit {font-size:15px;margin-left:2px;}
+.language-demo-card .card-comparison {font-size:12px;color:#7581a1;}
+.language-demo-card .card-description {font-size:12px;line-height:1.6;color:#7581a1;border-top:1px solid #e7ebf5;padding-top:10px;margin:12px 0 0;}
+.language-demo-card .card-detail {font-size:11px;line-height:1.5;color:#68738e;margin:7px 0 0;}
+@media(max-width:440px) {.language-demo-grid {grid-template-columns:1fr;}}
+</style>
+<section class="language-demo">
+  <h2>언어·인지 지표</h2>
+  <p class="demo-notice">시연용 합성 데이터 · 변화율은 가상의 개인 기준선과 비교한 값입니다.</p>
+  <div class="language-demo-grid">
+    {% for card in cognition.language_cards %}
+    <article class="language-demo-card {{ card.grade }}">
+      <div class="card-heading">
+        <span class="card-title">{{ card.title }}</span>
+        <span class="card-badge">{{ card.grade | grade_ko }}</span>
+      </div>
+      <div class="card-value">{{ card.display_value }}<span class="card-unit">{{ card.unit }}</span></div>
+      <div class="card-comparison">기준선 {{ card.display_baseline }}{{ card.unit }} · {{ card.change | pct_str }}</div>
+      <p class="card-description">{{ card.description }}</p>
+      {% if card.detail %}<p class="card-detail">{{ card.detail }}</p>{% endif %}
+    </article>
+    {% endfor %}
+  </div>
+</section>

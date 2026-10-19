@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+<meta name="theme-color" content="#5d6dbe">
+
+<title>월간 감정·인지 리포트</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<style>
+
+/* ── 디자인 토큰 ── */
+
+:root {
+
+  --primary:       #5d6dbe;
+
+  --primary-light: #9fa9d8;
+
+  --primary-bg:    #f0f2fb;
+
+  --primary-soft:  #e8eaf8;
+
+
+
+  --white:   #ffffff;
+
+  --bg:      #f5f6fb;
+
+  --surface: #ffffff;
+
+  --border:  #e4e7f4;
+
+  --border2: #ced3ed;
+
+
+
+  --text-1: #1a1d35;
+
+  --text-2: #4b5278;
+
+  --text-3: #8a91b8;
+
+
+
+  --danger:      #d94f4f;
+
+  --danger-bg:   #fdf1f1;
+
+  --danger-bd:   #f0c0c0;
+
+  --warn:        #c47c1a;
+
+  --warn-bg:     #fdf5e6;
+
+  --warn-bd:     #ecd09a;
+
+  --ok:          #2e7d5e;
+
+  --ok-bg:       #eaf5f0;
+
+  --ok-bd:       #a5d9c4;
+
+
+
+  --r:   8px;
+
+  --r2:  12px;
+
+  --r3:  16px;
+
+  --sh:  0 2px 12px rgba(93,109,190,0.08);
+
+  --sh2: 0 4px 20px rgba(93,109,190,0.13);
+
+}
+
+
+
+/* ── 리셋 & 베이스 ── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 15px; -webkit-text-size-adjust: 100%; }
+
+body {
+
+  font-family: 'Noto Sans KR', -apple-system, sans-serif;
+
+  background: var(--bg);
+
+  color: var(--text-1);
+
+  line-height: 1.6;
+
+  padding-bottom: 3rem;
+
+  -webkit-font-smoothing: antialiased;
+
+}
+
+
+
+/* ── 레이아웃 ── */
+
+.page { max-width: 540px; margin: 0 auto; padding: 0 0 1rem; }
+
+
+
+/* ── 상단 헤더 (sticky) ── */
+
+.top-bar {
+
+  background: var(--primary);
+
+  color: #fff;
+
+  padding: 1.1rem 1.25rem 1rem;
+
+  position: sticky;
+
+  top: 0;
+
+  z-index: 100;
+
+  box-shadow: 0 2px 10px rgba(93,109,190,0.25);
+
+}
+
+.top-bar-inner { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+.top-bar-left .report-label { font-size: 10px; opacity: 0.75; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1px; }
+
+.top-bar-left .patient-name { font-size: 19px; font-weight: 700; letter-spacing: -0.02em; }
+
+.top-bar-left .report-date  { font-size: 11px; opacity: 0.7; margin-top: 1px; }
+
+.grade-pill {
+
+  display: flex; flex-direction: column; align-items: center;
+
+  background: rgba(255,255,255,0.18);
+
+  border: 1.5px solid rgba(255,255,255,0.35);
+
+  border-radius: 10px;
+
+  padding: 6px 14px;
+
+  min-width: 64px;
+
+  text-align: center;
+
+}
+
+.grade-pill .pill-label { font-size: 9px; opacity: 0.8; letter-spacing: 0.06em; text-transform: uppercase; }
+
+.grade-pill .pill-val   { font-size: 16px; font-weight: 700; margin-top: 1px; }
+
+.grade-pill.grade-risk    { background: rgba(217,79,79,0.28); border-color: rgba(255,180,180,0.5); }
+
+.grade-pill.grade-warning { background: rgba(196,124,26,0.25); border-color: rgba(255,210,120,0.5); }
+
+.grade-pill.grade-watch   { background: rgba(159,169,216,0.3); border-color: rgba(200,210,240,0.5); }
+
+
+
+/* ── 요약 띠 ── */
+
+.summary-strip {
+
+  background: var(--white);
+
+  border-bottom: 1.5px solid var(--border);
+
+  padding: 0.85rem 1.25rem;
+
+  display: grid;
+
+  grid-template-columns: repeat(4, 1fr);
+
+  gap: 4px;
+
+}
+
+.sum-item { text-align: center; }
+
+.sum-item .sv { font-size: 18px; font-weight: 700; color: var(--primary); line-height: 1.2; }
+
+.sum-item .sv small { font-size: 11px; font-weight: 400; color: var(--text-3); }
+
+.sum-item .sl { font-size: 10px; color: var(--text-3); margin-top: 1px; letter-spacing: 0.02em; }
+
+
+
+/* ── 섹션 공통 ── */
+
+.section { padding: 0 1rem; margin-top: 1.25rem; }
+
+.sec-head {
+
+  display: flex; align-items: center; gap: 7px;
+
+  margin-bottom: 0.65rem;
+
+}
+
+.sec-head .sec-icon {
+
+  width: 26px; height: 26px; border-radius: 7px;
+
+  background: var(--primary-bg);
+
+  display: flex; align-items: center; justify-content: center;
+
+  flex-shrink: 0;
+
+}
+
+.sec-head .sec-icon i { color: var(--primary); font-size: 14px; }
+
+.sec-head .sec-title  { font-size: 13px; font-weight: 600; color: var(--text-1); }
+
+.sec-head .sec-sub    { font-size: 11px; color: var(--text-3); margin-left: 2px; }
+
+
+
+/* ── 카드 ── */
+
+.card {
+
+  background: var(--white);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--r3);
+
+  padding: 1rem 1.1rem;
+
+  box-shadow: var(--sh);
+
+}
+
+.card + .card { margin-top: 10px; }
+
+.card-title { font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 10px; letter-spacing: 0.02em; }
+
+
+
+/* ── 소견 카드 ── */
+
+.insight-card {
+
+  background: linear-gradient(135deg, #f0f2fb 0%, #e8ebf8 100%);
+
+  border: 1px solid var(--primary-soft);
+
+  border-radius: var(--r3);
+
+  padding: 1.1rem 1.1rem 0.9rem;
+
+}
+
+.insight-text { font-size: 13.5px; line-height: 1.85; color: var(--text-1); margin-bottom: 12px; }
+
+.insight-text strong { color: var(--primary); }
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.tag {
+
+  display: inline-flex; align-items: center; gap: 3px;
+
+  font-size: 11px; font-weight: 500;
+
+  padding: 3px 9px; border-radius: 99px;
+
+  line-height: 1.4;
+
+}
+
+.tag i { font-size: 11px; }
+
+.tag-danger { background: var(--danger-bg); color: var(--danger); border: 0.5px solid var(--danger-bd); }
+
+.tag-warn   { background: var(--warn-bg);   color: var(--warn);   border: 0.5px solid var(--warn-bd); }
+
+.tag-ok     { background: var(--ok-bg);     color: var(--ok);     border: 0.5px solid var(--ok-bd); }
+
+.tag-blue   { background: var(--primary-bg); color: var(--primary); border: 0.5px solid var(--primary-soft); }
+
+
+
+/* ── 2열 그리드 ── */
+
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+
+
+/* ── 미니 지표 카드 ── */
+
+.metric-card {
+
+  background: var(--bg);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--r2);
+
+  padding: 0.8rem 0.9rem;
+
+}
+
+.metric-card .mc-label { font-size: 11px; color: var(--text-3); margin-bottom: 3px; }
+
+.metric-card .mc-val   { font-size: 22px; font-weight: 700; line-height: 1.1; color: var(--text-1); }
+
+.metric-card .mc-val.v-danger { color: var(--danger); }
+
+.metric-card .mc-val.v-ok    { color: var(--ok); }
+
+.metric-card .mc-hint { font-size: 11px; margin-top: 2px; }
+
+.hint-d { color: var(--danger); }
+
+.hint-w { color: var(--warn); }
+
+.hint-g { color: var(--ok); }
+
+.hint-n { color: var(--text-3); }
+
+.mc-val span { font-size: 13px; font-weight: 400; color: var(--text-3); }
+
+
+
+/* ── 알림 박스 ── */
+
+.alert-box {
+
+  border-radius: var(--r);
+
+  padding: 9px 12px;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+
+  display: flex; align-items: flex-start; gap: 8px;
+
+  margin-top: 10px;
+
+}
+
+.alert-box i { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+.ab-danger { background: var(--danger-bg); color: var(--danger); border-left: 3px solid var(--danger); }
+
+.ab-warn   { background: var(--warn-bg);   color: var(--warn);   border-left: 3px solid #e8943a; }
+
+.ab-info   { background: var(--primary-bg); color: var(--primary); border-left: 3px solid var(--primary-light); }
+
+
+
+/* ── 구슬 ── */
+
+.marbles-row { display: flex; justify-content: space-around; padding: 4px 0 12px; }
+
+.marble-item { text-align: center; }
+
+.marble-ball { width: 46px; height: 46px; border-radius: 50%; margin: 0 auto 5px; }
+
+.marble-joy     { background: radial-gradient(circle at 32% 28%, #fde68a, #d97706); box-shadow: 0 3px 10px rgba(217,119,6,.3); }
+
+.marble-calm    { background: radial-gradient(circle at 32% 28%, #6ee7b7, #059669); box-shadow: 0 3px 10px rgba(5,150,105,.3); }
+
+.marble-anger   { background: radial-gradient(circle at 32% 28%, #fca5a5, #dc2626); box-shadow: 0 3px 10px rgba(220,38,38,.3); }
+
+.marble-fear    { background: radial-gradient(circle at 32% 28%, #c4b5fd, #7c3aed); box-shadow: 0 3px 10px rgba(124,58,237,.3); }
+
+.marble-sadness { background: radial-gradient(circle at 32% 28%, #93c5fd, #1d4ed8); box-shadow: 0 3px 10px rgba(29,78,216,.3); }
+
+.marble-name  { font-size: 10px; color: var(--text-3); }
+
+.marble-count { font-size: 17px; font-weight: 700; color: var(--text-1); }
+
+.danger-highlight {
+
+  background: var(--danger-bg);
+
+  border-radius: var(--r);
+
+  padding: 9px 12px;
+
+  font-size: 12px; color: var(--danger);
+
+  display: flex; align-items: center; gap: 8px;
+
+}
+
+
+
+/* ── 언어·인지 그리드 ── */
+
+.cog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+.cog-card {
+
+  background: var(--white);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--r2);
+
+  padding: 0.85rem 0.9rem;
+
+  box-shadow: var(--sh);
+
+  position: relative;
+
+  overflow: hidden;
+
+}
+
+.cog-card::before {
+
+  content: '';
+
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+
+}
+
+.cog-card.s-danger::before { background: var(--danger); }
+
+.cog-card.s-warn::before   { background: #e8943a; }
+
+.cog-card.s-ok::before     { background: var(--ok); }
+
+.cog-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+
+.cog-name { font-size: 11px; color: var(--text-2); line-height: 1.35; }
+
+.cog-badge {
+
+  font-size: 9.5px; font-weight: 600;
+
+  padding: 2px 7px; border-radius: 99px;
+
+  white-space: nowrap; flex-shrink: 0;
+
+}
+
+.cb-danger { background: var(--danger-bg); color: var(--danger); }
+
+.cb-warn   { background: var(--warn-bg);   color: var(--warn); }
+
+.cb-ok     { background: var(--ok-bg);     color: var(--ok); }
+
+.cog-val {
+
+  font-size: 26px; font-weight: 700; line-height: 1.1;
+
+  margin-bottom: 2px;
+
+}
+
+.cog-val span { font-size: 13px; font-weight: 400; }
+
+.cog-val.v-danger { color: var(--danger); }
+
+.cog-val.v-warn   { color: var(--warn); }
+
+.cog-val.v-ok     { color: var(--ok); }
+
+.cog-base { font-size: 10.5px; color: var(--text-3); margin-bottom: 5px; }
+
+.cog-base .chg { font-weight: 600; }
+
+.chg-up   { color: var(--danger); }
+
+.chg-down { color: var(--ok); }
+
+.cog-desc { font-size: 10.5px; color: var(--text-3); line-height: 1.5; border-top: 0.5px solid var(--border); padding-top: 5px; }
+
+
+
+/* ── 감정 바 ── */
+
+.emo-list { display: flex; flex-direction: column; }
+
+.emo-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 0.5px solid var(--border); }
+
+.emo-row:last-child { border-bottom: none; }
+
+.emo-label { font-size: 12px; width: 44px; color: var(--text-2); flex-shrink: 0; }
+
+.emo-label.danger { color: var(--danger); font-weight: 600; }
+
+.emo-bar-bg { flex: 1; height: 7px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+
+.emo-bar { height: 100%; border-radius: 4px; }
+
+.emo-score { font-size: 12px; font-weight: 600; width: 22px; text-align: right; flex-shrink: 0; }
+
+.emo-score.danger { color: var(--danger); }
+
+.emo-chg { font-size: 11px; width: 44px; text-align: right; flex-shrink: 0; }
+
+.emo-chg.up   { color: var(--danger); }
+
+.emo-chg.down { color: var(--ok); }
+
+
+
+/* ── 달력 히트맵 ── */
+
+.cal-legend { display: flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--text-3); margin-bottom: 10px; }
+
+.cal-swatch { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+
+.cal-dow-row { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; margin-bottom: 3px; }
+
+.cal-dow     { font-size: 10px; color: var(--text-3); text-align: center; }
+
+.cal-body    { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+
+.cal-cell    { aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; }
+
+.cal-note    { font-size: 11px; color: var(--danger); margin-top: 9px; display: flex; align-items: center; gap: 5px; }
+
+
+
+/* ── anomaly 섹션 ── */
+
+.anomaly-stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 9px; margin-bottom: 12px; }
+
+.anom-stat { background: var(--bg); border: 1px solid var(--border); border-radius: var(--r2); padding: 0.75rem 0.85rem; }
+
+.anom-label { font-size: 10.5px; color: var(--text-3); margin-bottom: 3px; }
+
+.anom-val   { font-size: 21px; font-weight: 700; line-height: 1.1; }
+
+.anom-hint  { font-size: 10.5px; margin-top: 2px; }
+
+.alert-dist { margin-bottom: 14px; }
+
+.dist-label { font-size: 11px; color: var(--text-3); margin-bottom: 6px; }
+
+.dist-bar   { display: flex; height: 9px; border-radius: 5px; overflow: hidden; gap: 2px; margin-bottom: 6px; }
+
+.dist-legend { display: flex; flex-wrap: wrap; gap: 8px; font-size: 10.5px; color: var(--text-3); }
+
+.dist-legend span { display: flex; align-items: center; gap: 4px; }
+
+.dist-dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+.reason-list { display: flex; flex-direction: column; gap: 0; }
+
+.reason-item {
+
+  display: flex; align-items: flex-start; gap: 8px;
+
+  padding: 8px 0; border-bottom: 0.5px solid var(--border);
+
+  font-size: 12.5px; line-height: 1.55; color: var(--text-1);
+
+}
+
+.reason-item:last-child { border-bottom: none; }
+
+.reason-num { color: var(--primary); font-weight: 700; font-size: 13px; flex-shrink: 0; min-width: 16px; }
+
+.chart-label { font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 8px; }
+
+.chart-legend-row { display: flex; gap: 12px; font-size: 10.5px; color: var(--text-3); margin-bottom: 8px; flex-wrap: wrap; }
+
+.chart-legend-row span { display: flex; align-items: center; gap: 4px; }
+
+.leg-line { width: 14px; height: 2px; border-radius: 1px; display: inline-block; }
+
+
+
+/* ── XAI 카드 ── */
+
+.xai-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 10px; }
+
+.xai-card {
+
+  background: var(--white);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--r2);
+
+  padding: 0.9rem 1rem;
+
+  box-shadow: var(--sh);
+
+}
+
+.xai-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 4px; }
+
+.xai-em  { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+
+.xai-em i { font-size: 15px; }
+
+.xai-date { font-size: 11px; color: var(--text-3); }
+
+.xai-quote {
+
+  font-size: 13px; line-height: 1.75;
+
+  background: var(--bg); border-radius: var(--r);
+
+  padding: 8px 12px; margin-bottom: 8px;
+
+  color: var(--text-1);
+
+  border-left: 2px solid var(--border2);
+
+}
+
+.score-pills { display: flex; gap: 5px; flex-wrap: wrap; }
+
+.score-pill { font-size: 11px; padding: 2px 8px; border-radius: 99px; border: 0.5px solid var(--border2); color: var(--text-2); }
+
+.score-pill strong { color: var(--text-1); }
+
+.xai-rest {
+
+  background: var(--bg); border: 1px solid var(--border);
+
+  border-radius: var(--r2); padding: 0.85rem 1rem;
+
+}
+
+.xai-rest-title { font-size: 11.5px; font-weight: 600; color: var(--text-2); margin-bottom: 10px; }
+
+.rest-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; font-size: 11.5px; }
+
+.rest-em   { color: var(--text-3); margin-bottom: 2px; font-size: 11px; }
+
+.rest-em.danger { color: var(--danger); font-weight: 600; }
+
+.rest-cnt  { font-weight: 700; font-size: 14px; color: var(--text-1); }
+
+.rest-dt   { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+
+
+
+/* ── 구분선 ── */
+
+.divider { border: none; border-top: 1px solid var(--border); margin: 1.1rem 1rem 0; }
+
+
+
+/* ── 면책 고지 ── */
+
+.disclaimer {
+
+  margin: 1.5rem 1rem 0;
+
+  background: var(--primary-bg);
+
+  border-radius: var(--r2);
+
+  padding: 0.85rem 1rem;
+
+  font-size: 11px; color: var(--text-3); line-height: 1.7;
+
+  display: flex; gap: 8px; align-items: flex-start;
+
+}
+
+.disclaimer i { color: var(--primary-light); font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+
+
+/* ── 애니메이션 ── */
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+.section { animation: fadeUp 0.35s ease both; }
+
+.section:nth-child(2){animation-delay:.05s} .section:nth-child(3){animation-delay:.10s}
+
+.section:nth-child(4){animation-delay:.12s} .section:nth-child(5){animation-delay:.15s}
+
+.section:nth-child(6){animation-delay:.18s} .section:nth-child(7){animation-delay:.21s}
+
+.section:nth-child(8){animation-delay:.24s} .section:nth-child(9){animation-delay:.27s}
+
+.section:nth-child(10){animation-delay:.30s}
+
+
+
+</style>
+
+</head>
+
+<body>
+
+<div class="page">
+
+
+
+  <!-- ══ STICKY 헤더 ══ -->
+
+  <header class="top-bar">
+
+    <div class="top-bar-inner">
+
+      <div class="top-bar-left">
+
+        <div class="report-label">{{ meta.year }}년 {{ meta.month }}월 · 감정·인지 리포트</div>
+
+        <div class="patient-name">{{ meta.user_id }}</div>
+
+        <div class="report-date">생성일 {{ meta.generated_at[:10] }}</div>
+
+      </div>
+
+      <div class="grade-pill
+
+        {% if meta.overall_grade == '위험' %}grade-risk
+
+        {% elif meta.overall_grade == '주의' %}grade-warning
+
+        {% elif meta.overall_grade == '관찰' %}grade-watch{% endif %}">
+
+        <div class="pill-label">종합 등급</div>
+
+        <div class="pill-val">{{ meta.overall_grade }}</div>
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+
+  <!-- ══ 요약 띠 ══ -->
+
+  <div class="summary-strip">
+
+    <div class="sum-item">
+
+      <div class="sv">{{ activity.active_days }}<small>/{{ activity.total_days }}</small></div>
+
+      <div class="sl">대화 활성일</div>
+
+    </div>
+
+    <div class="sum-item">
+
+      <div class="sv">{{ activity.session_count }}<small>회</small></div>
+
+      <div class="sl">총 세션</div>
+
+    </div>
+
+    <div class="sum-item">
+
+      <div class="sv">{{ marbles.total }}<small>개</small></div>
+
+      <div class="sl">구슬 배출</div>
+
+    </div>
+
+    <div class="sum-item">
+
+      <div class="sv" style="{% if marbles.danger_pct_change > 0.05 %}color:var(--danger){% else %}color:var(--primary){% endif %}">
+
+        {{ (marbles.danger_pct * 100) | round(0) | int }}<small>%</small>
+
+      </div>
+
+      <div class="sl">위험 감정</div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ══ 종합 소견 ══ -->
+
+  <div class="section">
+
+    <div class="sec-head">
+
+      <div class="sec-icon"><i class="ti ti-clipboard-text"></i></div>
+
+      <span class="sec-title">이달의 종합 소견</span>
+
+    </div>
+
+    <div class="insight-card">
+
+      <p class="insight-text">
+
+        이번 달 {{ meta.user_id }}님의 대화 패턴에서
+
+        {% set caution_list = [] %}
+
+        {% if cognition.demonstrative_pronoun_rate.grade == 'caution' %}{% set _ = caution_list.append('지시대명사 사용이 ' + (cognition.demonstrative_pronoun_rate.change | pct_str) + ' 증가') %}{% endif %}
+
+        {% if cognition.ttr.grade == 'caution' %}{% set _ = caution_list.append('단어 다양도가 ' + (cognition.ttr.change | pct_str) + ' 감소') %}{% endif %}
+
+        {% if cognition.response_delay_sec.grade == 'caution' %}{% set _ = caution_list.append('응답 지연이 ' + (cognition.response_delay_sec.change | pct_str) + ' 증가') %}{% endif %}
+
+        {% if cognition.wpm.grade == 'caution' %}{% set _ = caution_list.append('발화 속도가 ' + (cognition.wpm.change | pct_str) + ' 감소') %}{% endif %}
+
+        {% if caution_list %}<strong>{{ caution_list | join(', ') }}</strong>하여 주의가 필요한 변화가 관찰되었습니다.
+
+        {% else %}전반적으로 안정적인 패턴이 유지되었습니다.{% endif %}
+
+        {% if activity.max_gap_days >= 3 %} {{ activity.gap_start }}~{{ activity.gap_end }} {{ activity.max_gap_days }}일 연속 대화 공백도 확인되었습니다.{% endif %}
+
+        {% if marbles.danger_pct_change > 0.03 %} 위험 감정(불안·슬픔) 구슬이 전달 대비 <strong>{{ (marbles.danger_pct_change * 100) | round(1) }}%p 증가</strong>하였습니다.{% endif %}
+
+        {% if meta.overall_grade in ['주의', '위험'] %} <strong>전문가 상담을 권장드립니다.</strong>{% endif %}
+
+      </p>
+
+      <div class="tag-row">
+
+        {% if cognition.demonstrative_pronoun_rate.grade == 'caution' %}<span class="tag tag-danger"><i class="ti ti-alert-triangle"></i> 지시대명사 {{ cognition.demonstrative_pronoun_rate.change | pct_str }}</span>{% endif %}
+
+        {% if cognition.ttr.grade == 'caution' %}<span class="tag tag-danger"><i class="ti ti-alert-triangle"></i> TTR {{ cognition.ttr.change | pct_str }}</span>{% endif %}
+
+        {% if cognition.response_delay_sec.grade == 'caution' %}<span class="tag tag-danger"><i class="ti ti-alert-triangle"></i> 응답 지연 {{ cognition.response_delay_sec.change | pct_str }}</span>{% endif %}
+
+        {% if cognition.wpm.grade == 'caution' %}<span class="tag tag-danger"><i class="ti ti-alert-triangle"></i> WPM {{ cognition.wpm.change | pct_str }}</span>{% endif %}
+
+        {% if cognition.repetition.grade in ['caution','watch'] %}<span class="tag tag-warn"><i class="ti ti-eye"></i> 반복 발화 신규 감지</span>{% endif %}
+
+        <!-- {% if marbles.danger_pct_change > 0.03 %}<span class="tag tag-warn"><i class="ti ti-eye"></i> 위험 감정 +{{ (marbles.danger_pct_change * 100) | round(1) }}%p</span>{% endif %} -->
+
+        {% if cognition.sentence_complexity.grade == 'ok' %}<span class="tag tag-ok"><i class="ti ti-check"></i> 문장 복잡도 정상</span>{% endif %}
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <hr class="divider">
+
+
+
+  <!-- ══ 대화 활동 ══ -->
+
+  <div class="section">
+
+    <div class="sec-head">
+
+      <div class="sec-icon"><i class="ti ti-message-circle-2"></i></div>
+
+      <span class="sec-title">대화 활동</span>
+
+    </div>
+
+    <div class="card">
+
+      <div class="g2">
+
+        <div class="metric-card">
+
+          <div class="mc-label">하루 평균 대화</div>
+
+          <div class="mc-val">{{ activity.avg_daily_minutes }}<span>분</span></div>
+
+          <div class="mc-hint {% if activity.avg_minutes_change and activity.avg_minutes_change < -0.15 %}hint-d{% else %}hint-g{% endif %}">
+
+            전달 대비 {{ activity.avg_minutes_change | pct_str }}
+
+          </div>
+
+        </div>
+
+        <div class="metric-card">
+
+          <div class="mc-label">최장 연속 공백</div>
+
+          <div class="mc-val {% if activity.max_gap_days >= 3 %}v-danger{% endif %}">{{ activity.max_gap_days }}<span>일</span></div>
+
+          <div class="mc-hint {% if activity.max_gap_days >= 3 %}hint-d{% else %}hint-n{% endif %}">
+
+            {% if activity.gap_start %}{{ activity.gap_start }}~{{ activity.gap_end }}{% else %}공백 없음{% endif %}
+
+          </div>
+
+        </div>
+
+        <div class="metric-card">
+
+          <div class="mc-label">총 세션 수</div>
+
+          <div class="mc-val">{{ activity.session_count }}<span>회</span></div>
+
+          <div class="mc-hint hint-n">이달 누계</div>
+
+        </div>
+
+        <div class="metric-card">
+
+          <div class="mc-label">총 대화 시간</div>
+
+          <div class="mc-val">{{ activity.total_minutes | round(0) | int }}<span>분</span></div>
+
+          <div class="mc-hint hint-n">이달 누계</div>
+
+        </div>
+
+      </div>
+
+      {% if activity.max_gap_days >= 3 %}
+
+      <div class="alert-box ab-danger">
+
+        <i class="ti ti-alert-circle"></i>
+
+        <span>{{ activity.gap_start }}~{{ activity.gap_end }} {{ activity.max_gap_days }}일 연속 대화 공백이 확인됩니다. 이 기간 안부를 확인해 보시길 권장합니다.</span>
+
+      </div>
+
+      {% endif %}
+
+    </div>
+
+  </div>
+
+
+
+  <hr class="divider">
+
+
+
+  <!-- ══ 구슬 배출 ══ -->
+
+  <div class="section">
+
+    <div class="sec-head">
+
+      <div class="sec-icon"><i class="ti ti-circle-dot"></i></div>
+
+      <span class="sec-title">이달의 감정 구슬 배출</span>
+
+    </div>
+
+    <div class="card">
+
+      <div class="marbles-row">
+
+        <div class="marble-item"><div class="marble-ball marble-joy"></div><div class="marble-name">기쁨</div><div class="marble-count">{{ marbles.counts.joy }}</div></div>
+
+        <div class="marble-item"><div class="marble-ball marble-calm"></div><div class="marble-name">평온</div><div class="marble-count">{{ marbles.counts.calm }}</div></div>
+
+        <div class="marble-item"><div class="marble-ball marble-anger"></div><div class="marble-name">분노</div><div class="marble-count">{{ marbles.counts.anger }}</div></div>
+
+        <div class="marble-item"><div class="marble-ball marble-fear"></div><div class="marble-name">두려움</div><div class="marble-count">{{ marbles.counts.fear }}</div></div>
+
+        <div class="marble-item"><div class="marble-ball marble-sadness"></div><div class="marble-name">슬픔</div><div class="marble-count">{{ marbles.counts.sadness }}</div></div>
+
+      </div>
+
+      <div class="danger-highlight">
+
+        <i class="ti ti-alert-circle" style="color:var(--danger);flex-shrink:0;"></i>
+
+        <span>위험 감정(두려움+슬픔) <strong>{{ marbles.danger_count }}개 · {{ (marbles.danger_pct*100)|round(1) }}%</strong> — 전달 {{ (marbles.prev_danger_pct*100)|round(1) }}% 대비 <strong>{{ '%+.1f'|format(marbles.danger_pct_change*100) }}%p</strong></span>
+
+      </div>
+
+      {% if marbles.danger_pct_change > 0.05 %}
+
+      <div class="alert-box ab-warn">
+
+        <i class="ti ti-info-circle"></i>
+
+        <span>두려움·슬픔 구슬이 전달보다 증가했습니다. 가족 방문이나 통화 빈도를 확인해 보시길 권장합니다.</span>
+
+      </div>
+
+      {% endif %}
+
+    </div>
+
+  </div>
+
+
+
+  <hr class="divider">
+
+
+
+  <!-- ══ 언어·인지 지표 ══ -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-icon"><i class="ti ti-brain"></i></div>
+    <span class="sec-title">언어·인지 지표</span>
+  </div>
+
+  <div class="cog-grid">
+
+    {% set f = cognition.demonstrative_pronoun_rate %}
+    <div class="cog-card s-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+      <div class="cog-top">
+        <span class="cog-name">지시대명사 사용 빈도</span>
+        <span class="cog-badge cb-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+          {{ f.grade | grade_ko }}
+        </span>
+      </div>
+      <div class="cog-val v-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+        {{ f.value }}<span>회/발화</span>
+      </div>
+      <div class="cog-base">
+        기준선 {{ f.baseline }}회/발화
+        &nbsp;
+        <span class="chg {% if f.change and f.change > 0 %}chg-up{% else %}chg-down{% endif %}">
+          {{ f.change | pct_str }}
+          {% if f.change and f.change > 0 %}↑{% else %}↓{% endif %}
+        </span>
+      </div>
+      <div class="cog-desc">
+        "그것", "거기" 등 지시 표현의 사용 변화를 관찰
+      </div>
+    </div>
+
+    {% set f = cognition.ttr %}
+    <div class="cog-card s-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+      <div class="cog-top">
+        <span class="cog-name">단어 다양도<br>(TTR)</span>
+        <span class="cog-badge cb-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+          {{ f.grade | grade_ko }}
+        </span>
+      </div>
+      <div class="cog-val v-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+        {{ f.value }}
+      </div>
+      <div class="cog-base">
+        기준선 {{ f.baseline }}
+        &nbsp;
+        <span class="chg {% if f.change and f.change < 0 %}chg-up{% else %}chg-down{% endif %}">
+          {{ f.change | pct_str }}
+          {% if f.change and f.change > 0 %}↑{% else %}↓{% endif %}
+        </span>
+      </div>
+      <div class="cog-desc">
+        어휘 범위의 변화를 개인 기준선과 비교
+      </div>
+    </div>
+
+    {% set r = cognition.repetition %}
+    <div class="cog-card s-{{ r.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+      <div class="cog-top">
+        <span class="cog-name">반복 발화 감지</span>
+        <span class="cog-badge cb-{{ r.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+          {{ r.grade | grade_ko }}
+        </span>
+      </div>
+      <div class="cog-val v-{{ r.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+        {{ r.count }}<span>회</span>
+      </div>
+      <div class="cog-base">
+        지난달 {{ r.prev_count }}회
+        &nbsp;
+        <span class="chg {% if r.count > r.prev_count %}chg-up{% else %}chg-down{% endif %}">
+          {% if r.prev_count == 0 and r.count > 0 %}
+            신규
+          {% else %}
+            {{ ((r.count - r.prev_count) / (r.prev_count or 1) * 100) | round(0) | int }}%
+          {% endif %}
+        </span>
+      </div>
+      <div class="cog-desc">
+        {% if r.top_words %}
+          반복어:
+          {% for w in r.top_words %}
+            "{{ w.word }}"{% if not loop.last %}, {% endif %}
+          {% endfor %}
+        {% else %}
+          반복 발화 없음
+        {% endif %}
+      </div>
+    </div>
+
+    {% set f = cognition.response_delay_sec %}
+    <div class="cog-card s-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+      <div class="cog-top">
+        <span class="cog-name">평균 응답 지연</span>
+        <span class="cog-badge cb-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+          {{ f.grade | grade_ko }}
+        </span>
+      </div>
+      <div class="cog-val v-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+        {{ f.value }}<span>초</span>
+      </div>
+      <div class="cog-base">
+        기준선 {{ f.baseline }}초
+        &nbsp;
+        <span class="chg {% if f.change and f.change > 0 %}chg-up{% else %}chg-down{% endif %}">
+          {{ f.change | pct_str }}
+          {% if f.change and f.change > 0 %}↑{% else %}↓{% endif %}
+        </span>
+      </div>
+      <div class="cog-desc">
+        응답까지 걸리는 평균 시간의 변화를 관찰
+      </div>
+    </div>
+
+    {% set f = cognition.wpm %}
+    <div class="cog-card s-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+      <div class="cog-top">
+        <span class="cog-name">발화 속도<br>(WPM)</span>
+        <span class="cog-badge cb-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+          {{ f.grade | grade_ko }}
+        </span>
+      </div>
+      <div class="cog-val v-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+        {{ f.value | round(0) | int }}<span>WPM</span>
+      </div>
+      <div class="cog-base">
+        기준선 {{ f.baseline | round(0) | int }}
+        &nbsp;
+        <span class="chg {% if f.change and f.change < 0 %}chg-up{% else %}chg-down{% endif %}">
+          {{ f.change | pct_str }}
+          {% if f.change and f.change > 0 %}↑{% else %}↓{% endif %}
+        </span>
+      </div>
+      <div class="cog-desc">
+        발화 속도의 변화를 개인 기준선과 비교
+      </div>
+    </div>
+
+    {% set f = cognition.sentence_complexity %}
+    <div class="cog-card s-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+      <div class="cog-top">
+        <span class="cog-name">문장 복잡도</span>
+        <span class="cog-badge cb-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+          {{ f.grade | grade_ko }}
+        </span>
+      </div>
+      <div class="cog-val v-{{ f.grade | replace('caution','danger') | replace('watch','warn') | replace('ok','ok') }}">
+        {{ f.label or '정상' }}
+      </div>
+      <div class="cog-base">
+        기준선 대비 {{ f.change | pct_str }}
+        <span style="color:var(--text-3);">
+          {% if f.grade == 'ok' %}정상 범위{% endif %}
+        </span>
+      </div>
+      <div class="cog-desc">
+        문장 구성 능력
+        {% if f.grade == 'ok' %}정상 유지{% else %}변화 감지{% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<hr class="divider">
+
+
+<!-- ══ 감정 분석 ══ -->
+<div class="section">
+  <div class="sec-head">
+    <div class="sec-icon"><i class="ti ti-mood-smile"></i></div>
+    <span class="sec-title">감정 분석</span>
+  </div>
+
+  <div class="card" style="margin-bottom:10px;">
+    <div class="card-title">감정 월평균 점수</div>
+
+    {% set em_colors = {
+      'joy':'#d97706',
+      'calm':'#059669',
+      'anger':'#dc2626',
+      'fear':'#7c3aed',
+      'sadness':'#1d4ed8'
+    } %}
+
+    {% set em_names = {
+      'joy':'기쁨',
+      'calm':'평온',
+      'anger':'분노',
+      'fear':'두려움',
+      'sadness':'슬픔'
+    } %}
+
+    <div class="emo-list">
+      {% for em in ['anger','joy','calm','fear','sadness'] %}
+        {% set ed = emotion.monthly_avg[em] %}
+
+        <div class="emo-row">
+          <span class="emo-label {% if em in ['fear','sadness'] %}danger{% endif %}">
+            {{ em_names[em] }}
+          </span>
+
+          <div class="emo-bar-bg">
+            <div
+              class="emo-bar"
+              style="width:{{ ed.mean }}%;background:{{ em_colors[em] }};">
+            </div>
+          </div>
+
+          <span class="emo-score {% if em in ['fear','sadness'] %}danger{% endif %}">
+            {{ ed.mean }}
+          </span>
+
+          <span class="emo-chg {% if ed.change and ed.change > 0 %}up{% else %}down{% endif %}">
+            {{ ed.change | pct_str(0) }}
+          </span>
+        </div>
+      {% endfor %}
+    </div>
+
+    <p style="font-size:10px;color:var(--text-3);margin-top:8px;">
+      * 강조 항목은 두려움·슬픔 감정입니다.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">주차별 위험 감정 트렌드</div>
+
+    <div class="chart-legend-row">
+      <span>
+        <span class="leg-line" style="background:#7c3aed;"></span>
+        두려움
+      </span>
+
+      <span>
+        <span
+          class="leg-line"
+          style="background:#1d4ed8;border-top:2px dashed #1d4ed8;height:0;">
+        </span>
+        슬픔
+      </span>
+
+      <span>
+        <span class="leg-line" style="background:var(--primary-light);"></span>
+        기쁨(참고)
+      </span>
+    </div>
+
+    <div style="position:relative;height:160px;">
+      <canvas
+        id="trendChart"
+        role="img"
+        aria-label="주차별 감정 트렌드 차트">
+      </canvas>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+
+<!-- ══ 감정 기복 달력 ══ -->
+
+  <div class="section">
+
+    <div class="sec-head">
+
+      <div class="sec-icon"><i class="ti ti-calendar-month"></i></div>
+
+      <span class="sec-title">감정 기복 달력</span>
+
+      <span class="sec-sub">표준편차 기반</span>
+
+    </div>
+
+    <div class="card">
+
+      <div class="cal-legend">
+
+        <span>안정</span>
+
+        <span class="cal-swatch" style="background:#e8eaf8;border:0.5px solid var(--border);"></span>
+
+        <span class="cal-swatch" style="background:#c5caf0;"></span>
+
+        <span class="cal-swatch" style="background:#8a95d8;"></span>
+
+        <span class="cal-swatch" style="background:var(--primary);"></span>
+
+        <span>기복 심함</span>
+
+      </div>
+
+      <div class="cal-dow-row">
+
+        {% for d in ['일','월','화','수','목','금','토'] %}<div class="cal-dow">{{ d }}</div>{% endfor %}
+
+      </div>
+
+      <div class="cal-body" id="calBody"></div>
+
+      {% if calendar.top3_volatile_days %}
+
+      <div class="cal-note">
+
+        <i class="ti ti-alert-circle"></i>
+
+        기복 심한 날:
+
+        {% for d in calendar.top3_volatile_days %}
+
+          <strong>{{ d.date_str }}({{ d.dominant_emotion }})</strong>{% if not loop.last %},{% endif %}
+
+        {% endfor %}
+
+      </div>
+
+      {% endif %}
+
+    </div>
+
+  </div>
+
+
+
+  <hr class="divider">
+
+
+
+  <!-- ══ 이상 감지 트렌드 ══ -->
+
+  <div class="section">
+
+    <div class="sec-head">
+
+      <div class="sec-icon"><i class="ti ti-chart-line"></i></div>
+
+      <span class="sec-title">이상 감지 트렌드</span>
+
+      <span class="sec-sub">Z-score + EWMA</span>
+
+    </div>
+
+
+
+    {% if anomaly.has_data %}
+
+    <div class="card">
+
+      <div class="anomaly-stats">
+
+        <div class="anom-stat">
+
+          <div class="anom-label">월 평균 위험도</div>
+
+          <div class="anom-val" style="color:var(--primary);">{{ anomaly.monthly_avg_risk }}</div>
+
+          <div class="anom-hint hint-n">risk score</div>
+
+        </div>
+
+        <div class="anom-stat">
+
+          <div class="anom-label">월 최고 위험도</div>
+
+          <div class="anom-val {% if anomaly.monthly_max_risk >= 1.5 %}v-danger{% elif anomaly.monthly_max_risk >= 1.0 %}v-warn{% else %}v-ok{% endif %}">{{ anomaly.monthly_max_risk }}</div>
+
+          <div class="anom-hint {% if anomaly.monthly_max_risk >= 1.5 %}hint-d{% else %}hint-n{% endif %}">{% if anomaly.peak_date %}{{ anomaly.peak_date }}{% endif %}</div>
+
+        </div>
+
+        <div class="anom-stat">
+
+          <div class="anom-label">이상 감지 일수</div>
+
+          <div class="anom-val {% if anomaly.alert_distribution.warning + anomaly.alert_distribution.risk > 0 %}v-danger{% else %}v-ok{% endif %}">{{ anomaly.alert_distribution.warning + anomaly.alert_distribution.risk }}<span style="font-size:13px;font-weight:400;color:var(--text-3);">일</span></div>
+
+          <div class="anom-hint hint-n">주의 이상</div>
+
+        </div>
+
+        <div class="anom-stat">
+
+          <div class="anom-label">최종 등급</div>
+
+          <div class="anom-val" style="font-size:18px;
+
+            {% if anomaly.final_alert_level=='risk' %}color:var(--danger);
+
+            {% elif anomaly.final_alert_level=='warning' %}color:var(--warn);
+
+            {% elif anomaly.final_alert_level=='watch' %}color:var(--primary);
+
+            {% else %}color:var(--ok);{% endif %}">
+
+            {% if anomaly.final_alert_level=='risk' %}위험
+
+            {% elif anomaly.final_alert_level=='warning' %}주의
+
+            {% elif anomaly.final_alert_level=='watch' %}관찰
+
+            {% else %}정상{% endif %}
+
+          </div>
+
+          <div class="anom-hint hint-n">alert level</div>
+
+        </div>
+
+      </div>
+
+
+
+      {% set total_alert_days = anomaly.alert_distribution.normal + anomaly.alert_distribution.watch + anomaly.alert_distribution.warning + anomaly.alert_distribution.risk %}
+
+      {% if total_alert_days > 0 %}
+
+      <div class="alert-dist">
+
+        <div class="dist-label">이달 등급 분포 ({{ total_alert_days }}일)</div>
+
+        <div class="dist-bar">
+
+          {% if anomaly.alert_distribution.normal > 0 %}<div style="flex:{{ anomaly.alert_distribution.normal }};background:var(--ok-bg);"></div>{% endif %}
+
+          {% if anomaly.alert_distribution.watch > 0 %}<div style="flex:{{ anomaly.alert_distribution.watch }};background:var(--primary-light);"></div>{% endif %}
+
+          {% if anomaly.alert_distribution.warning > 0 %}<div style="flex:{{ anomaly.alert_distribution.warning }};background:#f0b942;"></div>{% endif %}
+
+          {% if anomaly.alert_distribution.risk > 0 %}<div style="flex:{{ anomaly.alert_distribution.risk }};background:var(--danger);"></div>{% endif %}
+
+        </div>
+
+        <div class="dist-legend">
+
+          <span><span class="dist-dot" style="background:var(--ok-bg);border:0.5px solid var(--ok-bd);"></span>정상 {{ anomaly.alert_distribution.normal }}일</span>
+
+          <span><span class="dist-dot" style="background:var(--primary-light);"></span>관찰 {{ anomaly.alert_distribution.watch }}일</span>
+
+          <span><span class="dist-dot" style="background:#f0b942;"></span>주의 {{ anomaly.alert_distribution.warning }}일</span>
+
+          <span><span class="dist-dot" style="background:var(--danger);"></span>위험 {{ anomaly.alert_distribution.risk }}일</span>
+
+        </div>
+
+      </div>
+
+      {% endif %}
+
+
+
+      <div class="chart-label">일별 위험도 추이</div>
+
+      <div class="chart-legend-row">
+
+        <span><span class="leg-line" style="background:#e86b5a;"></span>daily risk</span>
+
+        <span><span class="leg-line" style="background:var(--primary);"></span>EWMA 추세선</span>
+
+      </div>
+
+      <div style="position:relative;height:140px;margin-bottom:16px;">
+
+        <canvas id="anomalyDailyChart" role="img" aria-label="일별 위험도 추이 차트"></canvas>
+
+      </div>
+
+
+
+      {% if anomaly.top_reasons %}
+
+      <div class="chart-label">이달 주요 이상 감지 원인</div>
+
+      <div class="reason-list">
+
+        {% for reason in anomaly.top_reasons %}
+
+        <div class="reason-item">
+
+          <span class="reason-num">{{ loop.index }}.</span>
+
+          <span>{{ reason }}</span>
+
+        </div>
+
+        {% endfor %}
+
+      </div>
+
+      {% endif %}
+
+    </div>
+
+
+
+    {% else %}
+
+    <div class="card" style="text-align:center;padding:2rem;color:var(--text-3);">
+
+      <i class="ti ti-clock" style="font-size:28px;display:block;margin-bottom:8px;color:var(--primary-light);"></i>
+
+      <p style="font-size:13px;">이상 감지 데이터가 아직 없습니다.</p>
+
+      <p style="font-size:11px;margin-top:4px;">최소 7일 이상의 데이터가 필요합니다.</p>
+
+    </div>
+
+    {% endif %}
+
+  </div>
+
+
+
+  <hr class="divider">
+
+
+
+  <!-- ══ XAI 발화 원문 ══ -->
+
+  <div class="section">
+
+    <div class="sec-head">
+
+      <div class="sec-icon"><i class="ti ti-quote"></i></div>
+
+      <span class="sec-title">감정 급등 발화 원문</span>
+
+      <span class="sec-sub">각 감정 상위 2건</span>
+
+    </div>
+
+    <div class="xai-list" id="xaiList"></div>
+
+  </div>
+
+
+
+  <!-- ══ 면책 고지 ══ -->
+
+  <div class="disclaimer">
+
+    <i class="ti ti-info-circle"></i>
+
+    <span>본 리포트는 의료 진단이 아닌 참고 자료입니다. 건강 상태에 대한 정확한 진단은 반드시 의료 전문가와 상담하시기 바랍니다.</span>
+
+  </div>
+
+
+
+</div>
+
+
+
+<!-- 데이터 주입: application/json 타입으로 분리하여 JS 파서 오류 방지 -->
+
+<script type="application/json" id="d-weekly">{{ weekly_json | safe }}</script>
+
+<script type="application/json" id="d-calendar">{{ calendar_json | safe }}</script>
+
+<script type="application/json" id="d-xai">{{ xai_json | safe }}</script>
+
+<script type="application/json" id="d-anomaly">{{ anomaly_json | safe }}</script>
+
+<script type="application/json" id="d-weekly-risk">{{ weekly_risk_json | safe }}</script>
+
+<script type="application/json" id="d-meta">{"total_days": {{ activity.total_days }}, "month": {{ meta.month }}, "year": {{ meta.year }}}</script>
+
+
+
+<script>
+
+  // application/json 태그에서 데이터를 읽어 JS 변수로 변환
+
+  function gd(id) { return JSON.parse(document.getElementById(id).textContent); }
+
+  var WEEKLY_DATA   = gd('d-weekly');
+
+  var CALENDAR_DATA = gd('d-calendar');
+
+  var XAI_DATA      = gd('d-xai');
+
+  var ANOMALY_DATA  = gd('d-anomaly');
+
+  var WEEKLY_RISK   = gd('d-weekly-risk');
+
+  var _META         = gd('d-meta');
+
+  var TOTAL_DAYS    = _META.total_days;
+
+  var REPORT_MONTH  = _META.month;
+
+  var REPORT_YEAR   = _META.year;
+
+</script>
+
+
+
+<script>
+
+/* ── 달력 히트맵 ── */
+
+const firstDow = new Date(REPORT_YEAR, REPORT_MONTH - 1, 1).getDay();
+
+const calBody  = document.getElementById('calBody');
+
+for (let i = 0; i < firstDow; i++) {
+
+  const b = document.createElement('div'); b.className = 'cal-cell'; calBody.appendChild(b);
+
+}
+
+for (let d = 1; d <= TOTAL_DAYS; d++) {
+
+  const std = CALENDAR_DATA[String(d)] || 0;
+
+  let bg, color;
+
+  if      (std === 0) { bg = '#f5f6fb'; color = '#c0c4d8'; }
+
+  else if (std < 20)  { bg = '#e8eaf8'; color = '#5d6dbe'; }
+
+  else if (std < 40)  { bg = '#c5caf0'; color = '#3a4a9e'; }
+
+  else if (std < 60)  { bg = '#8a95d8'; color = '#fff'; }
+
+  else                { bg = '#5d6dbe'; color = '#fff'; }
+
+  const cell = document.createElement('div');
+
+  cell.className = 'cal-cell';
+
+  cell.style.cssText = `background:${bg};color:${color};`;
+
+  cell.title = `${REPORT_MONTH}월 ${d}일 기복지수 ${std}`;
+
+  cell.textContent = d;
+
+  calBody.appendChild(cell);
+
+}
+
+
+
+/* ── XAI 카드 ── */
+
+const EM_ICON  = {anger:'ti-mood-angry',fear:'ti-ghost',sadness:'ti-heart-broken',joy:'ti-mood-happy',calm:'ti-leaf'};
+
+const EM_COLOR = {anger:'#dc2626',fear:'#7c3aed',sadness:'#1d4ed8',joy:'#d97706',calm:'#059669'};
+
+const EM_KO    = {anger:'분노',fear:'두려움',sadness:'슬픔',joy:'기쁨',calm:'평온'};
+
+XAI_DATA.forEach(d => {
+
+  const scoreHtml = Object.entries(d.scores).sort((a,b)=>b[1]-a[1]).slice(0,3)
+
+    .map(([k,v])=>`<span class="score-pill">${EM_KO[k]||k} <strong>${Math.round(v)}</strong>점</span>`).join('');
+
+  const div = document.createElement('div');
+
+  div.className = 'xai-card';
+
+  div.style.borderLeft = `3px solid ${EM_COLOR[d.emotion]||'#888'}`;
+
+  div.innerHTML = `
+
+    <div class="xai-top">
+
+      <div class="xai-em" style="color:${EM_COLOR[d.emotion]||'#888'}">
+
+        <i class="ti ${EM_ICON[d.emotion]||'ti-circle'}"></i>
+
+        ${EM_KO[d.emotion]||d.emotion} 급등
+
+        <span class="xai-date">· ${d.timestamp}</span>
+
+      </div>
+
+      <span style="font-size:10px;color:var(--text-3);">${EM_KO[d.emotion]||d.emotion} 구슬 배출</span>
+
+    </div>
+
+    <div class="xai-quote">${d.text}</div>
+
+    <div class="score-pills">${scoreHtml}</div>`;
+
+  document.getElementById('xaiList').appendChild(div);
+
+});
+
+
+
+/* ── 주차별 감정 트렌드 차트 ── */
+
+Chart.defaults.font.family = "'Noto Sans KR', sans-serif";
+
+new Chart(document.getElementById('trendChart'), {
+
+  type: 'line',
+
+  data: {
+
+    labels: WEEKLY_DATA.map(w => `${w.week}주차`),
+
+    datasets: [
+
+      {label:'두려움', data:WEEKLY_DATA.map(w=>w.fear),    borderColor:'#7c3aed', backgroundColor:'rgba(124,58,237,0.05)', tension:0.4, pointRadius:4, borderWidth:2},
+
+      {label:'슬픔',   data:WEEKLY_DATA.map(w=>w.sadness), borderColor:'#1d4ed8', backgroundColor:'rgba(29,78,216,0.05)',  tension:0.4, pointRadius:4, borderWidth:2, borderDash:[4,3]},
+
+      {label:'기쁨',   data:WEEKLY_DATA.map(w=>w.joy),     borderColor:'#9fa9d8', backgroundColor:'transparent',           tension:0.4, pointRadius:3, borderWidth:1.5, borderDash:[2,4]},
+
+    ]
+
+  },
+
+  options: {
+
+    responsive:true, maintainAspectRatio:false,
+
+    plugins:{legend:{display:false}},
+
+    scales:{
+
+      y:{min:0,max:100, grid:{color:'rgba(93,109,190,0.06)'}, ticks:{font:{size:10},stepSize:25,color:'#8a91b8'}},
+
+      x:{grid:{display:false}, ticks:{font:{size:10},color:'#8a91b8'}}
+
+    }
+
+  }
+
+});
+
+
+
+/* ── 일별 위험도 차트 ── */
+
+const anomalyCanvas = document.getElementById('anomalyDailyChart');
+
+if (anomalyCanvas && Object.keys(ANOMALY_DATA).length > 0) {
+
+  const sortedDates = Object.keys(ANOMALY_DATA).sort();
+
+  const dailyLabels = sortedDates.map(d => d.slice(5));
+
+  const dailyScores = sortedDates.map(d => ANOMALY_DATA[d].daily_risk_score);
+
+  const ewmaScores  = sortedDates.map(d => ANOMALY_DATA[d].ewma_risk_score);
+
+  const ptColors    = sortedDates.map(d => {
+
+    const lvl = ANOMALY_DATA[d].alert_level;
+
+    return lvl==='risk'?'#dc2626':lvl==='warning'?'#e8943a':lvl==='watch'?'#9fa9d8':'#a5d9c4';
+
+  });
+
+  new Chart(anomalyCanvas, {
+
+    type:'line',
+
+    data:{
+
+      labels:dailyLabels,
+
+      datasets:[
+
+        {label:'daily risk', data:dailyScores, borderColor:'#e86b5a', backgroundColor:'rgba(232,107,90,0.07)', tension:0.3, pointRadius:3, pointBackgroundColor:ptColors, pointBorderColor:'transparent', borderWidth:1.5, fill:true},
+
+        {label:'EWMA',       data:ewmaScores,  borderColor:'#5d6dbe', backgroundColor:'transparent',              tension:0.4, pointRadius:0, borderWidth:2, borderDash:[4,3]},
+
+      ]
+
+    },
+
+    options:{
+
+      responsive:true, maintainAspectRatio:false,
+
+      plugins:{
+
+        legend:{display:false},
+
+        tooltip:{callbacks:{
+
+          label:(ctx)=>{
+
+            const info = ANOMALY_DATA[sortedDates[ctx.dataIndex]];
+
+            return `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(3)} [${info.alert_level}]`;
+
+          }
+
+        }}
+
+      },
+
+      scales:{
+
+        y:{min:0, grid:{color:'rgba(93,109,190,0.06)'}, ticks:{font:{size:10},color:'#8a91b8'}},
+
+        x:{grid:{display:false}, ticks:{font:{size:9},color:'#8a91b8',maxTicksLimit:8,maxRotation:0}}
+
+      }
+
+    }
+
+  });
+
+}
+
+</script>
+
+</body>
+
+</html>
