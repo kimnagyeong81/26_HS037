@@ -280,7 +280,7 @@ merry-ai namespace
 ---
 
 ## 🎬 4. 작품 소개영상
-[![독거노인을 위한 일상 대화 기반 치매 조기(MCI) 감지 AI 시스템](유튜브 썸네일 URL)]([유튜브 영상 URL](https://www.youtube.com/watch?v=M-WoIrAcjj8))
+![독거노인을 위한 일상 대화 기반 치매 조기(MCI) 감지 AI 시스템](/docs/images/썸네일.png)](https://www.youtube.com/watch?v=M-WoIrAcjj8)
 
 ---
 
